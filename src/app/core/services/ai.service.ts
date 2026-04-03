@@ -36,6 +36,11 @@ export class AiService {
         - Duración por sesión: ${params.duration} minutos
         - Zonas a priorizar: ${params.muscles || 'Ninguna'}
         - Lesiones/Limitaciones: ${params.injuries || 'Ninguna'}${userContextStr}
+
+        REGLAS ESTRICTAS PARA EVITAR CORTES EN LA RESPUESTA:
+        1. Genera un MÁXIMO de 5 ejercicios por día.
+        2. Las descripciones deben ser de 3 a 5 palabras máximo.
+        3. Asegúrate de cerrar correctamente todas las llaves y corchetes del JSON.
       `;
 
       const systemInstruction = `
@@ -56,45 +61,29 @@ export class AiService {
             type: Type.OBJECT,
             properties: {
               rutina_nombre: { type: Type.STRING },
-              objetivo: { type: Type.STRING },
-              nivel: { type: Type.STRING },
               dias: {
                 type: Type.ARRAY,
                 items: {
                   type: Type.OBJECT,
                   properties: {
-                    dia_numero: { type: Type.INTEGER },
                     nombre_dia: { type: Type.STRING },
-                    duracion_estimada_minutos: { type: Type.INTEGER },
-                    calentamiento: {
-                      type: Type.OBJECT,
-                      properties: {
-                        descripcion: { type: Type.STRING },
-                        duracion_minutos: { type: Type.INTEGER },
-                        ejercicios_calentamiento: { type: Type.ARRAY, items: { type: Type.STRING } }
-                      }
-                    },
+                    calentamiento: { type: Type.STRING },
                     ejercicios: {
                       type: Type.ARRAY,
                       items: {
                         type: Type.OBJECT,
                         properties: {
-                          orden: { type: Type.INTEGER },
                           nombre: { type: Type.STRING },
-                          musculo_principal: { type: Type.STRING },
                           series: { type: Type.INTEGER },
                           repeticiones: { type: Type.STRING },
-                          descanso_segundos: { type: Type.INTEGER },
-                          peso_sugerido: { type: Type.STRING },
-                          descripcion_completa: { type: Type.STRING }
+                          descanso: { type: Type.INTEGER },
+                          desc: { type: Type.STRING }
                         }
                       }
                     }
                   }
                 }
-              },
-              notas_generales: { type: Type.STRING },
-              frecuencia_progresion: { type: Type.STRING }
+              }
             }
           }
         }

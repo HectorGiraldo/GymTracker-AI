@@ -76,43 +76,28 @@
 
   <!-- Resultados -->
   <div *ngIf="generatedRoutine" class="p-6 border-t border-white/10 bg-secondary">
-    <h3 class="text-xl font-bold text-primary mb-2">{{ generatedRoutine.rutina_nombre }}</h3>
-    <p class="text-sm text-gray-400 mb-4">Objetivo: {{ generatedRoutine.objetivo }} | Nivel: {{ generatedRoutine.nivel }}</p>
+    <h3 class="text-xl font-bold text-primary mb-4">{{ generatedRoutine.rutina_nombre }}</h3>
     
     <div class="space-y-6">
       <div *ngFor="let dia of generatedRoutine.dias" class="glass p-4 rounded-lg">
         <h4 class="font-bold text-lg text-primary border-b border-white/10 pb-2 mb-3">{{ dia.nombre_dia }}</h4>
-        <p class="text-sm text-gray-400 mb-4">Duración estimada: {{ dia.duracion_estimada_minutos }} min</p>
         
         <div class="mb-4 bg-orange-500/10 border border-orange-500/20 p-3 rounded-md">
-          <h5 class="font-semibold text-orange-400 text-sm">Calentamiento ({{ dia.calentamiento.duracion_minutos }} min)</h5>
-          <p class="text-sm text-orange-300 mt-1">{{ dia.calentamiento.descripcion }}</p>
-          <ul class="list-disc list-inside text-sm text-orange-300 mt-2">
-            <li *ngFor="let cal of dia.calentamiento.ejercicios_calentamiento">{{ cal }}</li>
-          </ul>
+          <h5 class="font-semibold text-orange-400 text-sm">Calentamiento</h5>
+          <p class="text-sm text-orange-300 mt-1">{{ dia.calentamiento }}</p>
         </div>
 
         <div class="space-y-4">
-          <div *ngFor="let ej of dia.ejercicios" class="border border-white/10 rounded-md p-3 bg-black/20">
+          <div *ngFor="let ej of dia.ejercicios; let i = index" class="border border-white/10 rounded-md p-3 bg-black/20">
             <div class="flex justify-between items-start">
-              <h5 class="font-bold text-foreground">{{ ej.orden }}. {{ ej.nombre }}</h5>
+              <h5 class="font-bold text-foreground">{{ i + 1 }}. {{ ej.nombre }}</h5>
               <span class="bg-primary/20 text-primary text-xs font-semibold px-2.5 py-0.5 rounded">{{ ej.series }} x {{ ej.repeticiones }}</span>
             </div>
-            <p class="text-xs text-gray-400 mt-1">Músculo: {{ ej.musculo_principal }} | Descanso: {{ ej.descanso_segundos }}s</p>
-            <p class="text-sm text-gray-300 mt-2">{{ ej.descripcion_completa }}</p>
-            <div class="mt-2 bg-white/5 p-2 rounded text-xs text-gray-300">
-              <strong class="text-primary">Peso sugerido:</strong> {{ ej.peso_sugerido }}
-            </div>
+            <p class="text-xs text-gray-400 mt-1">Descanso: {{ ej.descanso }}s</p>
+            <p class="text-sm text-gray-300 mt-2">{{ ej.desc }}</p>
           </div>
         </div>
       </div>
-    </div>
-    
-    <div class="mt-6 bg-primary/10 border border-primary/20 p-4 rounded-lg">
-      <h4 class="font-bold text-primary">Notas Generales</h4>
-      <p class="text-sm text-gray-300 mt-1">{{ generatedRoutine.notas_generales }}</p>
-      <h4 class="font-bold text-primary mt-3">Progresión</h4>
-      <p class="text-sm text-gray-300 mt-1">{{ generatedRoutine.frecuencia_progresion }}</p>
     </div>
 
     <div class="mt-8 flex justify-center">
