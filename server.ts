@@ -20,7 +20,7 @@ if (process.env.NODE_ENV === 'production') {
   // Serve static files EXCEPT index.html so we can inject env vars
   app.use(express.static(distPath, { index: false }));
   
-  app.get('*', (req, res) => {
+  app.get(/.*/, (req, res) => {
     const indexPath = path.join(distPath, 'index.html');
     if (fs.existsSync(indexPath)) {
       let html = fs.readFileSync(indexPath, 'utf8');
