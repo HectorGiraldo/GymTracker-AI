@@ -8,7 +8,6 @@ import { ProfileService } from '../../core/services/profile.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './profile.component.html',
-  styleUrl: './profile.component.scss'
 })
 export class ProfileComponent implements OnInit {
   private fb = inject(FormBuilder);
