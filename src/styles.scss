@@ -1,0 +1,64 @@
+
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@use '@angular/material' as mat;
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+// Plus imports for other components in your app.
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat.core();
+
+// Define the theme object.
+$gym-tracker-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: mat.$azure-palette,
+    tertiary: mat.$blue-palette,
+  ),
+  density: (
+    scale: 0,
+  )
+));
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+:root {
+  @include mat.all-component-themes($gym-tracker-theme);
+  
+  --color-background: #0a0a0a;
+  --color-foreground: #ffffff;
+  --color-primary: #ccff00; /* Volt Green */
+  --color-secondary: #1a1a1a;
+  --color-accent: #333333;
+}
+
+@layer base {
+  html, body { 
+    height: 100%; 
+  }
+  body { 
+    margin: 0; 
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-black font-bold py-3 px-6 rounded-xl hover:opacity-90 transition-all active:scale-95 flex justify-center items-center gap-2;
+  }
+
+  .input-field {
+    @apply bg-secondary border border-white/10 rounded-xl p-3 focus:border-primary outline-none transition-all text-foreground w-full;
+  }
+}

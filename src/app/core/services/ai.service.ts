@@ -1,0 +1,109 @@
+import { Injectable } from '@angular/core';
+import { GoogleGenAI, Type } from '@google/genai';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AiService {
+  async generateRoutine(params: any): Promise<any> {
+    try {
+      // Soporte para AI Studio (GEMINI_API_KEY global) y para producción en Coolify (window.__ENV__)
+      let apiKey = '';
+      try {
+        apiKey = typeof GEMINI_API_KEY !== 'undefined' ? GEMINI_API_KEY : '';
+      } catch (e) {}
+      
+      if (!apiKey) {
+        apiKey = (window as any).__ENV__?.GEMINI_API_KEY || '';
+      }
+
+      if (!apiKey) {
+        throw new Error('API Key de Gemini no encontrada. Configura GEMINI_API_KEY en las variables de entorno.');
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+
+      const userContextStr = params.userContext 
+        ? `\n    - Contexto del usuario: Nombre: ${params.userContext.name || 'No especificado'}, Peso: ${params.userContext.weight || 'No especificado'} kg, Altura: ${params.userContext.height || 'No especificado'} cm.`
+        : '';
+
+      const prompt = `
+        Genera una rutina de gimnasio con los siguientes parámetros:
+        - Días por semana: ${params.days}
+        - Nivel: ${params.level}
+        - Objetivo: ${params.objective}
+        - Equipamiento: ${params.equipment}
+        - Duración por sesión: ${params.duration} minutos
+        - Zonas a priorizar: ${params.muscles || 'Ninguna'}
+        - Lesiones/Limitaciones: ${params.injuries || 'Ninguna'}${userContextStr}
+      `;
+
+      const systemInstruction = `
+        Eres "GymTracker AI", un entrenador personal.
+        DEBES responder ÚNICA Y EXCLUSIVAMENTE con un objeto JSON válido.
+        Las descripciones de los ejercicios deben ser de MÁXIMO 10 palabras.
+        No incluyas NINGUNA información redundante. Sé extremadamente breve.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.1-pro-preview',
+        contents: prompt,
+        config: {
+          systemInstruction,
+          maxOutputTokens: 8192,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              rutina_nombre: { type: Type.STRING },
+              objetivo: { type: Type.STRING },
+              nivel: { type: Type.STRING },
+              dias: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    dia_numero: { type: Type.INTEGER },
+                    nombre_dia: { type: Type.STRING },
+                    duracion_estimada_minutos: { type: Type.INTEGER },
+                    calentamiento: {
+                      type: Type.OBJECT,
+                      properties: {
+                        descripcion: { type: Type.STRING },
+                        duracion_minutos: { type: Type.INTEGER },
+                        ejercicios_calentamiento: { type: Type.ARRAY, items: { type: Type.STRING } }
+                      }
+                    },
+                    ejercicios: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          orden: { type: Type.INTEGER },
+                          nombre: { type: Type.STRING },
+                          musculo_principal: { type: Type.STRING },
+                          series: { type: Type.INTEGER },
+                          repeticiones: { type: Type.STRING },
+                          descanso_segundos: { type: Type.INTEGER },
+                          peso_sugerido: { type: Type.STRING },
+                          descripcion_completa: { type: Type.STRING }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              notas_generales: { type: Type.STRING },
+              frecuencia_progresion: { type: Type.STRING }
+            }
+          }
+        }
+      });
+
+      return JSON.parse(response.text || '{}');
+    } catch (error) {
+      console.error('Error generating routine with AI:', error);
+      throw error;
+    }
+  }
+}
