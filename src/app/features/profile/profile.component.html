@@ -14,12 +14,12 @@
     <h3 class="text-lg font-bold text-foreground mb-4 border-b border-white/10 pb-2">Cuenta</h3>
     
     <!-- Loading State -->
-    <div *ngIf="!profileService.isAuthReady() || profileService.isProcessingRedirect()" class="flex flex-col items-center justify-center py-6">
+    <div *ngIf="!profileService.isAuthReady() || profileService.isProcessingAuth()" class="flex flex-col items-center justify-center py-6">
       <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
       <p class="text-gray-400 text-sm">Verificando sesión...</p>
     </div>
 
-    <div *ngIf="profileService.isAuthReady() && !profileService.isProcessingRedirect()">
+    <div *ngIf="profileService.isAuthReady() && !profileService.isProcessingAuth()">
       <div *ngIf="!profileService.currentUser()" class="flex flex-col items-center gap-4 py-4">
         <p class="text-sm text-gray-400 text-center">Inicia sesión para guardar tus rutinas y tu historial en la nube.</p>
         <button (click)="login()" class="bg-white text-black hover:bg-gray-200 font-bold py-3 px-6 rounded-xl transition-colors flex items-center gap-3">

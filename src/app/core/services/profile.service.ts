@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { auth, db } from '../../../firebase';
-import { onAuthStateChanged, signInWithRedirect, GoogleAuthProvider, signOut, User, getRedirectResult } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 
 export interface UserProfile {
@@ -35,28 +35,17 @@ export class ProfileService {
   profile = signal<UserProfile>({ ...this.defaultProfile });
   currentUser = signal<User | null>(null);
   isAuthReady = signal<boolean>(false);
-  isProcessingRedirect = signal<boolean>(true); // Add loading state
+  isProcessingAuth = signal<boolean>(true);
 
   constructor() {
     this.initAuth();
-    this.checkRedirectResult();
-  }
-
-  private async checkRedirectResult() {
-    try {
-      await getRedirectResult(auth);
-    } catch (error) {
-      console.error('Error getting redirect result:', error);
-    } finally {
-      this.isProcessingRedirect.set(false);
-    }
   }
 
   private initAuth() {
     onAuthStateChanged(auth, (user) => {
       this.currentUser.set(user);
       this.isAuthReady.set(true);
-      this.isProcessingRedirect.set(false); // Ensure it's false when auth state is known
+      this.isProcessingAuth.set(false);
       
       if (user) {
         this.listenToProfile(user.uid);
@@ -67,11 +56,14 @@ export class ProfileService {
   }
 
   async login() {
+    this.isProcessingAuth.set(true);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithRedirect(auth, provider);
+      await signInWithPopup(auth, provider);
     } catch (error) {
       console.error('Error logging in:', error);
+    } finally {
+      this.isProcessingAuth.set(false);
     }
   }
 
