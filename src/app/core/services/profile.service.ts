@@ -35,6 +35,7 @@ export class ProfileService {
   profile = signal<UserProfile>({ ...this.defaultProfile });
   currentUser = signal<User | null>(null);
   isAuthReady = signal<boolean>(false);
+  isProcessingRedirect = signal<boolean>(true); // Add loading state
 
   constructor() {
     this.initAuth();
@@ -46,6 +47,8 @@ export class ProfileService {
       await getRedirectResult(auth);
     } catch (error) {
       console.error('Error getting redirect result:', error);
+    } finally {
+      this.isProcessingRedirect.set(false);
     }
   }
 
@@ -53,6 +56,7 @@ export class ProfileService {
     onAuthStateChanged(auth, (user) => {
       this.currentUser.set(user);
       this.isAuthReady.set(true);
+      this.isProcessingRedirect.set(false); // Ensure it's false when auth state is known
       
       if (user) {
         this.listenToProfile(user.uid);
