@@ -39,19 +39,18 @@ export class AiService {
 
         REGLAS ESTRICTAS PARA EVITAR CORTES EN LA RESPUESTA:
         1. Genera un MÁXIMO de 5 ejercicios por día.
-        2. Las descripciones deben ser de 3 a 5 palabras máximo.
-        3. Asegúrate de cerrar correctamente todas las llaves y corchetes del JSON.
+        2. Las descripciones deben ser MUY CORTAS (máximo 5 palabras).
+        3. Asegúrate de cerrar correctamente todas las llaves y corchetes del JSON. ¡NO CORTES LA RESPUESTA A LA MITAD!
       `;
 
       const systemInstruction = `
         Eres "GymTracker AI", un entrenador personal.
         DEBES responder ÚNICA Y EXCLUSIVAMENTE con un objeto JSON válido.
-        Las descripciones de los ejercicios deben ser de MÁXIMO 10 palabras.
-        No incluyas NINGUNA información redundante. Sé extremadamente breve.
+        Sé extremadamente breve en los textos para evitar que la respuesta se corte.
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3.1-pro-preview',
         contents: prompt,
         config: {
           systemInstruction,
@@ -61,29 +60,45 @@ export class AiService {
             type: Type.OBJECT,
             properties: {
               rutina_nombre: { type: Type.STRING },
+              objetivo: { type: Type.STRING },
+              nivel: { type: Type.STRING },
               dias: {
                 type: Type.ARRAY,
                 items: {
                   type: Type.OBJECT,
                   properties: {
+                    dia_numero: { type: Type.INTEGER },
                     nombre_dia: { type: Type.STRING },
-                    calentamiento: { type: Type.STRING },
+                    duracion_estimada_minutos: { type: Type.INTEGER },
+                    calentamiento: {
+                      type: Type.OBJECT,
+                      properties: {
+                        descripcion: { type: Type.STRING },
+                        duracion_minutos: { type: Type.INTEGER },
+                        ejercicios_calentamiento: { type: Type.ARRAY, items: { type: Type.STRING } }
+                      }
+                    },
                     ejercicios: {
                       type: Type.ARRAY,
                       items: {
                         type: Type.OBJECT,
                         properties: {
+                          orden: { type: Type.INTEGER },
                           nombre: { type: Type.STRING },
+                          musculo_principal: { type: Type.STRING },
                           series: { type: Type.INTEGER },
                           repeticiones: { type: Type.STRING },
-                          descanso: { type: Type.INTEGER },
-                          desc: { type: Type.STRING }
+                          descanso_segundos: { type: Type.INTEGER },
+                          peso_sugerido: { type: Type.STRING },
+                          descripcion_completa: { type: Type.STRING }
                         }
                       }
                     }
                   }
                 }
-              }
+              },
+              notas_generales: { type: Type.STRING },
+              frecuencia_progresion: { type: Type.STRING }
             }
           }
         }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { WorkoutStateService } from '../../core/services/workout-state.service';
+import { HistoryService, PastWorkout } from '../../core/services/history.service';
 
 interface SetLog {
   completed: boolean;
@@ -24,6 +25,7 @@ interface ExerciseLog {
 })
 export class WorkoutSessionComponent implements OnInit, OnDestroy {
   private workoutState = inject(WorkoutStateService);
+  private historyService = inject(HistoryService);
   private router = inject(Router);
 
   routine = this.workoutState.activeRoutine;
@@ -41,6 +43,7 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
   restTimeRemaining = signal<number>(0);
   private timerInterval: any;
   private autosaveInterval: any;
+  private startTime: Date = new Date();
 
   ngOnInit() {
     if (!this.currentDay()) {
@@ -48,6 +51,7 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.startTime = new Date();
     this.initializeLogs();
     
     // Simulate autosave every 30 seconds
@@ -72,7 +76,7 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
         sets.push({ completed: false, weight: null });
       }
       return {
-        exerciseId: ex.id,
+        exerciseId: ex.id || ex.nombre,
         sets,
         notes: ''
       };
@@ -122,9 +126,37 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
 
   finishWorkout() {
     if (this.isWorkoutComplete) {
+      const day = this.currentDay();
+      if (day) {
+        // Calculate total volume
+        let totalVolume = 0;
+        this.logs().forEach(log => {
+          log.sets.forEach(set => {
+            if (set.completed && set.weight) {
+              totalVolume += set.weight;
+            }
+          });
+        });
+
+        const endTime = new Date();
+        const durationMinutes = Math.round((endTime.getTime() - this.startTime.getTime()) / 60000);
+
+        const pastWorkout: PastWorkout = {
+          id: Date.now().toString(),
+          date: new Date(),
+          routineName: day.nombre_dia,
+          durationMinutes: durationMinutes > 0 ? durationMinutes : 1,
+          totalVolume,
+          completedExercises: day.ejercicios.length,
+          totalExercises: day.ejercicios.length
+        };
+
+        this.historyService.addWorkout(pastWorkout);
+      }
+
       alert('¡Felicidades! Has completado tu entrenamiento de hoy.');
       this.workoutState.clearRoutine();
-      this.router.navigate(['/']);
+      this.router.navigate(['/history']);
     }
   }
 }
