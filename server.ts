@@ -9,7 +9,7 @@ const PORT = process.env.NODE_ENV === 'production' ? (process.env.PORT || 3000) 
 
 app.use(helmet({
   contentSecurityPolicy: false, // Disabled for dev/preview environment
-  crossOriginOpenerPolicy: false, // REQUIRED FOR FIREBASE POPUP LOGIN (OAuth)
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }, // Secure policy that allows Firebase OAuth popups
 }));
 app.use(cors());
 app.use(express.json({ limit: '10kb' }));
