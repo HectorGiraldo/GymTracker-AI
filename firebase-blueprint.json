@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile data including physical stats and preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User's Firebase Auth UID" },
+        "name": { "type": "string" },
+        "weight": { "type": "number" },
+        "height": { "type": "number" },
+        "level": { "type": "string" },
+        "defaultEquipment": { "type": "string" },
+        "injuries": { "type": "string" },
+        "isConfigured": { "type": "boolean" }
+      },
+      "required": ["uid", "name", "level", "defaultEquipment", "isConfigured"]
+    },
+    "PastWorkout": {
+      "title": "PastWorkout",
+      "description": "A completed or partially completed workout session",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User's Firebase Auth UID" },
+        "date": { "type": "string", "format": "date-time" },
+        "routineName": { "type": "string" },
+        "durationMinutes": { "type": "number" },
+        "totalVolume": { "type": "number" },
+        "completedExercises": { "type": "number" },
+        "totalExercises": { "type": "number" }
+      },
+      "required": ["uid", "date", "routineName", "durationMinutes", "totalVolume", "completedExercises", "totalExercises"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profiles"
+    },
+    "/users/{userId}/workouts/{workoutId}": {
+      "schema": { "$ref": "#/entities/PastWorkout" },
+      "description": "User's past workouts"
+    }
+  }
+}

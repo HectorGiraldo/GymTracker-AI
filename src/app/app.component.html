@@ -8,7 +8,9 @@
         GymTracker
       </h1>
       <nav class="flex items-center gap-4 sm:gap-6 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 justify-center sm:justify-end">
-        <a routerLink="/" routerLinkActive="font-bold text-primary" [routerLinkActiveOptions]="{exact: true}" class="text-gray-300 hover:text-primary transition-colors whitespace-nowrap">Generador</a>
+        <a routerLink="/" routerLinkActive="font-bold text-primary" [routerLinkActiveOptions]="{exact: true}" class="text-gray-300 hover:text-primary transition-colors whitespace-nowrap">
+          {{ workoutState.activeRoutine() ? 'Mi Rutina' : 'Generador' }}
+        </a>
         <a routerLink="/history" routerLinkActive="font-bold text-primary" class="text-gray-300 hover:text-primary transition-colors whitespace-nowrap">Historial</a>
         <a routerLink="/profile" routerLinkActive="font-bold text-primary" class="text-gray-300 hover:text-primary transition-colors whitespace-nowrap">Perfil</a>
       </nav>

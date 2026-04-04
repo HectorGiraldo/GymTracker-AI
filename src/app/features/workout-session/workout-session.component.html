@@ -62,6 +62,10 @@
               <input type="number" [(ngModel)]="set.weight" placeholder="kg/lb"
                      class="w-20 px-2 py-1 text-sm border rounded-md outline-none focus:border-primary text-foreground"
                      [ngClass]="{'bg-transparent border-primary/50': set.completed, 'bg-secondary border-white/10': !set.completed}">
+              <span class="text-gray-500 text-sm">x</span>
+              <input type="number" [(ngModel)]="set.reps" placeholder="reps"
+                     class="w-16 px-2 py-1 text-sm border rounded-md outline-none focus:border-primary text-foreground"
+                     [ngClass]="{'bg-transparent border-primary/50': set.completed, 'bg-secondary border-white/10': !set.completed}">
             </div>
           </div>
         </div>

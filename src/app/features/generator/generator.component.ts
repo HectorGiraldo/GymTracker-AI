@@ -54,7 +54,24 @@ export class GeneratorComponent implements OnInit {
   ];
 
   isGenerating = false;
-  generatedRoutine: any = null;
+  
+  get generatedRoutine() {
+    return this.workoutState.activeRoutine();
+  }
+
+  get completedDays() {
+    return this.workoutState.completedDays();
+  }
+
+  isDayCompleted(index: number): boolean {
+    return this.completedDays.includes(index);
+  }
+
+  get allDaysCompleted(): boolean {
+    const routine = this.generatedRoutine;
+    if (!routine || !routine.dias) return false;
+    return routine.dias.every((_: any, i: number) => this.isDayCompleted(i));
+  }
 
   ngOnInit() {
     // Pre-fill form with profile data if configured
@@ -71,7 +88,6 @@ export class GeneratorComponent implements OnInit {
   async onSubmit() {
     if (this.generatorForm.valid) {
       this.isGenerating = true;
-      this.generatedRoutine = null;
       
       // Inject profile context into the request
       const profile = this.profileService.profile();
@@ -86,7 +102,7 @@ export class GeneratorComponent implements OnInit {
 
       try {
         const routine = await this.aiService.generateRoutine(requestData);
-        this.generatedRoutine = routine;
+        this.workoutState.setRoutine(routine, 0);
         console.log('Routine generated:', routine);
       } catch (error: any) {
         console.error('Failed to generate routine', error);
@@ -102,10 +118,16 @@ export class GeneratorComponent implements OnInit {
     }
   }
 
-  startWorkout() {
+  startWorkout(dayIndex: number = 0) {
     if (this.generatedRoutine) {
-      this.workoutState.setRoutine(this.generatedRoutine, 0); // Start with day 0
+      this.workoutState.setRoutine(this.generatedRoutine, dayIndex);
       this.router.navigate(['/workout']);
+    }
+  }
+
+  clearRoutine() {
+    if (confirm('¿Estás seguro de que quieres descartar esta rutina y crear una nueva?')) {
+      this.workoutState.clearRoutine();
     }
   }
 }

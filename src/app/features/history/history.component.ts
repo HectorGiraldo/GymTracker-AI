@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HistoryService } from '../../core/services/history.service';
 import * as d3 from 'd3';
@@ -16,18 +16,36 @@ export class HistoryComponent implements OnInit {
   @ViewChild('chartContainer', { static: true }) chartContainer!: ElementRef;
 
   workouts = this.historyService.pastWorkouts;
-  stats = this.historyService.getStats();
+  stats = this.historyService.stats;
   
   // Calendar generation
-  calendarDays: { date: number, isWorkout: boolean, isPartial: boolean, isToday: boolean }[] = [];
+  calendarDays: { date: number | null, isWorkout: boolean, isPartial: boolean, isToday: boolean }[] = [];
   currentMonthName = '';
 
+  showAllHistory = false;
+
+  constructor() {
+    effect(() => {
+      // This effect runs whenever pastWorkouts or chartData changes
+      this.generateCalendar();
+      this.renderChart();
+    });
+  }
+
   ngOnInit() {
-    this.generateCalendar();
-    this.renderChart();
+    // Initial generation is handled by the effect
+  }
+
+  toggleHistory() {
+    this.showAllHistory = !this.showAllHistory;
+  }
+
+  onFeatureNotImplemented(feature: string) {
+    alert(`La función "${feature}" estará disponible próximamente. Requerirá guardar la rutina completa en tu perfil.`);
   }
 
   generateCalendar() {
+    this.calendarDays = [];
     const today = new Date();
     this.currentMonthName = today.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
     
@@ -35,11 +53,19 @@ export class HistoryComponent implements OnInit {
     const month = today.getMonth();
     
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+    const offset = firstDay === 0 ? 6 : firstDay - 1; // Adjust for Monday start (0 is Sunday)
+
+    // Add empty slots for the offset
+    for (let i = 0; i < offset; i++) {
+      this.calendarDays.push({ date: null, isWorkout: false, isPartial: false, isToday: false });
+    }
+
     const workouts = this.workouts();
 
     for (let i = 1; i <= daysInMonth; i++) {
       const currentDate = new Date(year, month, i);
-      const isToday = i === today.getDate();
+      const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
       
       const workoutOnDay = workouts.find(w => 
         w.date.getDate() === i && 
@@ -57,11 +83,14 @@ export class HistoryComponent implements OnInit {
   }
 
   renderChart() {
-    const data = this.historyService.getChartData();
-    if (!data.length) return;
-
-    const element = this.chartContainer.nativeElement;
+    const data = this.historyService.chartData();
+    const element = this.chartContainer?.nativeElement;
+    
+    if (!element) return;
+    
     d3.select(element).selectAll('*').remove(); // Clear previous
+
+    if (!data.length) return;
 
     const margin = { top: 20, right: 20, bottom: 30, left: 50 };
     const width = element.clientWidth - margin.left - margin.right;

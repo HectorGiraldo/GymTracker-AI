@@ -8,6 +8,7 @@ import { HistoryService, PastWorkout } from '../../core/services/history.service
 interface SetLog {
   completed: boolean;
   weight: number | null;
+  reps: number | null;
 }
 
 interface ExerciseLog {
@@ -72,8 +73,18 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
 
     const initialLogs: ExerciseLog[] = day.ejercicios.map((ex: any) => {
       const sets: SetLog[] = [];
+      
+      // Try to parse default reps from ex.repeticiones (e.g. "10-12" -> 10)
+      let defaultReps = null;
+      if (typeof ex.repeticiones === 'string') {
+        const match = ex.repeticiones.match(/\d+/);
+        if (match) defaultReps = parseInt(match[0], 10);
+      } else if (typeof ex.repeticiones === 'number') {
+        defaultReps = ex.repeticiones;
+      }
+
       for (let i = 0; i < ex.series; i++) {
-        sets.push({ completed: false, weight: null });
+        sets.push({ completed: false, weight: null, reps: defaultReps });
       }
       return {
         exerciseId: ex.id || ex.nombre,
@@ -128,12 +139,12 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
     if (this.isWorkoutComplete) {
       const day = this.currentDay();
       if (day) {
-        // Calculate total volume
+        // Calculate total volume: Weight * Reps
         let totalVolume = 0;
         this.logs().forEach(log => {
           log.sets.forEach(set => {
-            if (set.completed && set.weight) {
-              totalVolume += set.weight;
+            if (set.completed && set.weight && set.reps) {
+              totalVolume += (set.weight * set.reps);
             }
           });
         });
@@ -152,10 +163,10 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
         };
 
         this.historyService.addWorkout(pastWorkout);
+        this.workoutState.markDayCompleted(this.dayIndex());
       }
 
       alert('¡Felicidades! Has completado tu entrenamiento de hoy.');
-      this.workoutState.clearRoutine();
       this.router.navigate(['/history']);
     }
   }

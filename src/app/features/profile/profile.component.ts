@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, effect } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ProfileService } from '../../core/services/profile.service';
@@ -11,7 +11,7 @@ import { ProfileService } from '../../core/services/profile.service';
 })
 export class ProfileComponent implements OnInit {
   private fb = inject(FormBuilder);
-  private profileService = inject(ProfileService);
+  public profileService = inject(ProfileService);
 
   profileForm = this.fb.group({
     name: ['', Validators.required],
@@ -34,16 +34,32 @@ export class ProfileComponent implements OnInit {
 
   savedSuccess = false;
 
-  ngOnInit() {
-    const currentProfile = this.profileService.profile();
-    this.profileForm.patchValue({
-      name: currentProfile.name,
-      weight: currentProfile.weight,
-      height: currentProfile.height,
-      level: currentProfile.level,
-      defaultEquipment: currentProfile.defaultEquipment,
-      injuries: currentProfile.injuries
+  constructor() {
+    effect(() => {
+      const currentProfile = this.profileService.profile();
+      if (currentProfile) {
+        this.profileForm.patchValue({
+          name: currentProfile.name,
+          weight: currentProfile.weight,
+          height: currentProfile.height,
+          level: currentProfile.level,
+          defaultEquipment: currentProfile.defaultEquipment,
+          injuries: currentProfile.injuries
+        }, { emitEvent: false });
+      }
     });
+  }
+
+  ngOnInit() {
+    // Initialization handled by effect
+  }
+
+  async login() {
+    await this.profileService.login();
+  }
+
+  async logout() {
+    await this.profileService.logout();
   }
 
   onSubmit() {

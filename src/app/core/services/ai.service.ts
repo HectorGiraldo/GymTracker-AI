@@ -38,9 +38,10 @@ export class AiService {
         - Lesiones/Limitaciones: ${params.injuries || 'Ninguna'}${userContextStr}
 
         REGLAS ESTRICTAS:
-        1. Genera un MÁXIMO de 5 ejercicios por día.
-        2. Las descripciones deben ser MUY CORTAS (máximo 5 palabras).
-        3. DEBES devolver ÚNICAMENTE un JSON válido con esta estructura exacta:
+        1. Genera EXACTAMENTE ${params.days} objetos en el array "dias", uno para cada día de entrenamiento.
+        2. Genera un MÁXIMO de 5 ejercicios por día.
+        3. Las descripciones deben ser MUY CORTAS (máximo 5 palabras).
+        4. DEBES devolver ÚNICAMENTE un JSON válido con esta estructura exacta:
         {
           "rutina_nombre": "Nombre",
           "objetivo": "Objetivo",

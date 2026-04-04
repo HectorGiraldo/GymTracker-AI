@@ -1,10 +1,15 @@
 <div class="max-w-3xl mx-auto glass rounded-xl overflow-hidden">
-  <div class="bg-secondary p-6 border-b border-white/10">
-    <h2 class="text-2xl font-bold text-primary">Generador de Rutinas IA</h2>
-    <p class="text-gray-400 mt-1">Configura tus parámetros y deja que la IA diseñe tu plan perfecto.</p>
+  <div class="bg-secondary p-6 border-b border-white/10 flex justify-between items-center">
+    <div>
+      <h2 class="text-2xl font-bold text-primary">Generador de Rutinas IA</h2>
+      <p class="text-gray-400 mt-1">Configura tus parámetros y deja que la IA diseñe tu plan perfecto.</p>
+    </div>
+    <button *ngIf="generatedRoutine" (click)="clearRoutine()" class="text-sm text-red-400 hover:text-red-300 font-medium bg-red-500/10 px-3 py-1.5 rounded-lg transition-colors">
+      Descartar Rutina
+    </button>
   </div>
 
-  <form [formGroup]="generatorForm" (ngSubmit)="onSubmit()" class="p-6 space-y-6">
+  <form *ngIf="!generatedRoutine" [formGroup]="generatorForm" (ngSubmit)="onSubmit()" class="p-6 space-y-6">
     
     <!-- Días y Nivel -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -75,37 +80,83 @@
   </form>
 
   <!-- Resultados -->
-  <div *ngIf="generatedRoutine" class="p-6 border-t border-white/10 bg-secondary">
-    <h3 class="text-xl font-bold text-primary mb-2">{{ generatedRoutine.rutina_nombre }}</h3>
-    <p class="text-sm text-gray-400 mb-4">Objetivo: {{ generatedRoutine.objetivo }} | Nivel: {{ generatedRoutine.nivel }}</p>
+  <div *ngIf="generatedRoutine" class="p-6 bg-secondary">
+    <div class="flex items-center gap-2 mb-2">
+      <h3 class="text-xl font-bold text-primary">{{ generatedRoutine.rutina_nombre }}</h3>
+      <span class="bg-primary/20 text-primary text-xs font-bold px-2 py-1 rounded-full">Activa</span>
+    </div>
+    <p class="text-sm text-gray-400 mb-6">Objetivo: {{ generatedRoutine.objetivo }} | Nivel: {{ generatedRoutine.nivel }}</p>
     
-    <div class="space-y-6">
-      <div *ngFor="let dia of generatedRoutine.dias" class="glass p-4 rounded-lg">
-        <h4 class="font-bold text-lg text-primary border-b border-white/10 pb-2 mb-3">{{ dia.nombre_dia }}</h4>
-        <p class="text-sm text-gray-400 mb-4">Duración estimada: {{ dia.duracion_estimada_minutos }} min</p>
-        
-        <div class="mb-4 bg-orange-500/10 border border-orange-500/20 p-3 rounded-md">
-          <h5 class="font-semibold text-orange-400 text-sm">Calentamiento ({{ dia.calentamiento.duracion_minutos }} min)</h5>
-          <p class="text-sm text-orange-300 mt-1">{{ dia.calentamiento.descripcion }}</p>
-          <ul class="list-disc list-inside text-sm text-orange-300 mt-2">
-            <li *ngFor="let cal of dia.calentamiento.ejercicios_calentamiento">{{ cal }}</li>
-          </ul>
-        </div>
+    <div *ngIf="allDaysCompleted" class="mb-6 bg-green-500/10 border border-green-500/30 p-6 rounded-xl text-center">
+      <div class="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-2xl font-bold text-green-400 mb-2">¡Semana Completada!</h3>
+      <p class="text-sm text-green-300 mb-6">Has terminado todos los entrenamientos de esta rutina. ¡Excelente trabajo!</p>
+      <button (click)="clearRoutine()" class="bg-green-500 text-black font-bold py-3 px-8 rounded-lg hover:bg-green-400 transition-colors shadow-lg shadow-green-500/20">
+        Generar Nueva Rutina
+      </button>
+    </div>
 
-        <div class="space-y-4">
-          <div *ngFor="let ej of dia.ejercicios" class="border border-white/10 rounded-md p-3 bg-black/20">
-            <div class="flex justify-between items-start">
-              <h5 class="font-bold text-foreground">{{ ej.orden }}. {{ ej.nombre }}</h5>
-              <span class="bg-primary/20 text-primary text-xs font-semibold px-2.5 py-0.5 rounded">{{ ej.series }} x {{ ej.repeticiones }}</span>
-            </div>
-            <p class="text-xs text-gray-400 mt-1">Músculo: {{ ej.musculo_principal }} | Descanso: {{ ej.descanso_segundos }}s</p>
-            <p class="text-sm text-gray-300 mt-2">{{ ej.descripcion_completa }}</p>
-            <div class="mt-2 bg-white/5 p-2 rounded text-xs text-gray-300">
-              <strong class="text-primary">Peso sugerido:</strong> {{ ej.peso_sugerido }}
+    <div class="space-y-6">
+      <ng-container *ngFor="let dia of generatedRoutine.dias; let i = index">
+        
+        <!-- Active/Pending Day -->
+        <div *ngIf="!isDayCompleted(i)" class="glass p-4 rounded-lg border border-white/5 relative overflow-hidden group">
+          <div class="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button (click)="startWorkout(i)" class="bg-primary text-black text-sm font-bold py-1.5 px-4 rounded-lg shadow-lg hover:bg-primary/90 transition-colors">
+              Iniciar Día {{ i + 1 }}
+            </button>
+          </div>
+          
+          <h4 class="font-bold text-lg text-primary border-b border-white/10 pb-2 mb-3 pr-32">{{ dia.nombre_dia }}</h4>
+          <p class="text-sm text-gray-400 mb-4">Duración estimada: {{ dia.duracion_estimada_minutos }} min</p>
+          
+          <div class="mb-4 bg-orange-500/10 border border-orange-500/20 p-3 rounded-md">
+            <h5 class="font-semibold text-orange-400 text-sm">Calentamiento ({{ dia.calentamiento.duracion_minutos }} min)</h5>
+            <p class="text-sm text-orange-300 mt-1">{{ dia.calentamiento.descripcion }}</p>
+            <ul class="list-disc list-inside text-sm text-orange-300 mt-2">
+              <li *ngFor="let cal of dia.calentamiento.ejercicios_calentamiento">{{ cal }}</li>
+            </ul>
+          </div>
+
+          <div class="space-y-4">
+            <div *ngFor="let ej of dia.ejercicios" class="border border-white/10 rounded-md p-3 bg-black/20">
+              <div class="flex justify-between items-start">
+                <h5 class="font-bold text-foreground">{{ ej.orden }}. {{ ej.nombre }}</h5>
+                <span class="bg-primary/20 text-primary text-xs font-semibold px-2.5 py-0.5 rounded">{{ ej.series }} x {{ ej.repeticiones }}</span>
+              </div>
+              <p class="text-xs text-gray-400 mt-1">Músculo: {{ ej.musculo_principal }} | Descanso: {{ ej.descanso_segundos }}s</p>
+              <p class="text-sm text-gray-300 mt-2">{{ ej.descripcion_completa }}</p>
+              <div class="mt-2 bg-white/5 p-2 rounded text-xs text-gray-300">
+                <strong class="text-primary">Peso sugerido:</strong> {{ ej.peso_sugerido }}
+              </div>
             </div>
           </div>
+          
+          <div class="mt-4 pt-4 border-t border-white/10 lg:hidden">
+            <button (click)="startWorkout(i)" class="w-full bg-primary text-black text-sm font-bold py-3 rounded-lg shadow-lg">
+              Iniciar Día {{ i + 1 }}
+            </button>
+          </div>
         </div>
-      </div>
+
+        <!-- Completed Day -->
+        <div *ngIf="isDayCompleted(i)" class="glass p-4 rounded-lg border border-green-500/30 bg-green-500/5 flex justify-between items-center opacity-70">
+          <div>
+            <h4 class="font-bold text-lg text-green-400 line-through">{{ dia.nombre_dia }}</h4>
+            <p class="text-xs text-gray-400 mt-1">Entrenamiento completado</p>
+          </div>
+          <div class="w-10 h-10 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+
+      </ng-container>
     </div>
     
     <div class="mt-6 bg-primary/10 border border-primary/20 p-4 rounded-lg">
@@ -113,16 +164,6 @@
       <p class="text-sm text-gray-300 mt-1">{{ generatedRoutine.notas_generales }}</p>
       <h4 class="font-bold text-primary mt-3">Progresión</h4>
       <p class="text-sm text-gray-300 mt-1">{{ generatedRoutine.frecuencia_progresion }}</p>
-    </div>
-
-    <div class="mt-8 flex justify-center">
-      <button (click)="startWorkout()" class="btn-primary text-lg px-8 py-4">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Comenzar Entrenamiento (Día 1)
-      </button>
     </div>
   </div>
 </div>
