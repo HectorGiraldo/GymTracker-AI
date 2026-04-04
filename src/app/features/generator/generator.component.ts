@@ -88,9 +88,14 @@ export class GeneratorComponent implements OnInit {
         const routine = await this.aiService.generateRoutine(requestData);
         this.generatedRoutine = routine;
         console.log('Routine generated:', routine);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to generate routine', error);
-        alert('Error al generar la rutina. Revisa la consola.');
+        
+        if (error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED') || error?.message?.includes('spending cap')) {
+          alert('Has alcanzado el límite de gasto de tu API Key (Error 429). Por favor, elimina tu API Key de los secretos (Settings > Secrets) para volver a usar la capa gratuita del sistema, o aumenta el límite en Google Cloud.');
+        } else {
+          alert('Error al generar la rutina. Revisa la consola para más detalles.');
+        }
       } finally {
         this.isGenerating = false;
       }

@@ -28,7 +28,7 @@ export class AiService {
         : '';
 
       const prompt = `
-        Genera una rutina de gimnasio con los siguientes parámetros:
+        Genera una rutina de gimnasio estructurada y realista con los siguientes parámetros:
         - Días por semana: ${params.days}
         - Nivel: ${params.level}
         - Objetivo: ${params.objective}
@@ -37,74 +37,63 @@ export class AiService {
         - Zonas a priorizar: ${params.muscles || 'Ninguna'}
         - Lesiones/Limitaciones: ${params.injuries || 'Ninguna'}${userContextStr}
 
-        REGLAS ESTRICTAS PARA EVITAR CORTES EN LA RESPUESTA:
+        REGLAS ESTRICTAS:
         1. Genera un MÁXIMO de 5 ejercicios por día.
         2. Las descripciones deben ser MUY CORTAS (máximo 5 palabras).
-        3. Asegúrate de cerrar correctamente todas las llaves y corchetes del JSON. ¡NO CORTES LA RESPUESTA A LA MITAD!
+        3. DEBES devolver ÚNICAMENTE un JSON válido con esta estructura exacta:
+        {
+          "rutina_nombre": "Nombre",
+          "objetivo": "Objetivo",
+          "nivel": "Nivel",
+          "dias": [
+            {
+              "dia_numero": 1,
+              "nombre_dia": "Día 1",
+              "duracion_estimada_minutos": 60,
+              "calentamiento": {
+                "descripcion": "Breve",
+                "duracion_minutos": 10,
+                "ejercicios_calentamiento": ["Ej 1", "Ej 2"]
+              },
+              "ejercicios": [
+                {
+                  "orden": 1,
+                  "nombre": "Nombre Ej",
+                  "musculo_principal": "Músculo",
+                  "series": 3,
+                  "repeticiones": "10-12",
+                  "descanso_segundos": 60,
+                  "peso_sugerido": "Moderado",
+                  "descripcion_completa": "Breve desc"
+                }
+              ]
+            }
+          ],
+          "notas_generales": "Notas",
+          "frecuencia_progresion": "Progresión"
+        }
       `;
 
       const systemInstruction = `
-        Eres "GymTracker AI", un entrenador personal.
-        DEBES responder ÚNICA Y EXCLUSIVAMENTE con un objeto JSON válido.
+        Eres "GymTracker AI", un entrenador personal experto.
+        DEBES responder ÚNICA Y EXCLUSIVAMENTE con un objeto JSON válido. NO uses bloques de código markdown (\`\`\`json).
         Sé extremadamente breve en los textos para evitar que la respuesta se corte.
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
+        model: 'gemini-3-flash-preview',
         contents: prompt,
         config: {
           systemInstruction,
+          temperature: 0.2,
           maxOutputTokens: 8192,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              rutina_nombre: { type: Type.STRING },
-              objetivo: { type: Type.STRING },
-              nivel: { type: Type.STRING },
-              dias: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    dia_numero: { type: Type.INTEGER },
-                    nombre_dia: { type: Type.STRING },
-                    duracion_estimada_minutos: { type: Type.INTEGER },
-                    calentamiento: {
-                      type: Type.OBJECT,
-                      properties: {
-                        descripcion: { type: Type.STRING },
-                        duracion_minutos: { type: Type.INTEGER },
-                        ejercicios_calentamiento: { type: Type.ARRAY, items: { type: Type.STRING } }
-                      }
-                    },
-                    ejercicios: {
-                      type: Type.ARRAY,
-                      items: {
-                        type: Type.OBJECT,
-                        properties: {
-                          orden: { type: Type.INTEGER },
-                          nombre: { type: Type.STRING },
-                          musculo_principal: { type: Type.STRING },
-                          series: { type: Type.INTEGER },
-                          repeticiones: { type: Type.STRING },
-                          descanso_segundos: { type: Type.INTEGER },
-                          peso_sugerido: { type: Type.STRING },
-                          descripcion_completa: { type: Type.STRING }
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              notas_generales: { type: Type.STRING },
-              frecuencia_progresion: { type: Type.STRING }
-            }
-          }
+          responseMimeType: 'application/json'
         }
       });
 
-      return JSON.parse(response.text || '{}');
+      const text = response.text || '{}';
+      console.log('Raw AI Response:', text);
+      return JSON.parse(text);
     } catch (error) {
       console.error('Error generating routine with AI:', error);
       throw error;
